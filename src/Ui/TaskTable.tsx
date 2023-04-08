@@ -164,7 +164,7 @@ export default function TaskTable({}) {
     }
   ];
 
-  const onDeleteStudent = (record: { id: string }) => {
+  const onDeleteStudent = (record: TodoType) => {
     Modal.confirm({
       title: "Are you sure, you want to delete this student record?",
       okText: "Yes",
