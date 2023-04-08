@@ -10,17 +10,14 @@ import {
   Modal,
   Select
 } from "antd";
-import FormItemLabel from "antd/es/form/FormItemLabel";
-import TextArea from "antd/es/input/TextArea";
-import dayjs from "dayjs";
-import React, { Dispatch, SetStateAction, useState } from "react";
+// import TextArea from "antd/es/input/TextArea";
+import React, { Dispatch, SetStateAction, useState, useRef } from "react";
 import { TodoType } from "./TaskTable";
 import Tags from "./Tags";
 import { useAtom } from "jotai";
 import { tagsAtom } from "@/store/store";
-import { formatDateTime } from "@/hooks/formatDateTime";
 import { format } from "date-fns";
-
+const { TextArea } = Input;
 interface AddTodo {
   handleSubmit?: React.FormEventHandler<HTMLFormElement> | undefined;
   todo: TodoType[];
@@ -33,9 +30,9 @@ export default function AddTodo(props: AddTodo) {
     return { value: e, label: e };
   });
 
-  const formRef = React.useRef<FormInstance>(null);
+  const formRef = useRef<FormInstance>(null);
   const [open, setOpen] = useState(false);
-  const [modalText, setModalText] = useState("Content of the modal");
+  //   const [modalText, setModalText] = useState("Content of the modal");
 
   const showModal = () => {
     setOpen(true);
@@ -46,7 +43,7 @@ export default function AddTodo(props: AddTodo) {
   };
 
   const handleOk = () => {
-    setModalText("The modal will be closed after two seconds");
+    // setModalText("The modal will be closed after two seconds");
     setOpen(false);
   };
 
