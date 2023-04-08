@@ -1,17 +1,39 @@
 /** @format */
 
 import { PlusOutlined } from "@ant-design/icons";
-import { Button, DatePicker, Form, Input, Modal, Select } from "antd";
+import {
+  Button,
+  DatePicker,
+  Form,
+  FormInstance,
+  Input,
+  Modal,
+  Select
+} from "antd";
 import FormItemLabel from "antd/es/form/FormItemLabel";
 import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
-import React, { useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
+import { TodoType } from "./TaskTable";
+import Tags from "./Tags";
+import { useAtom } from "jotai";
+import { tagsAtom } from "@/store/store";
+import { formatDateTime } from "@/hooks/formatDateTime";
+import { format } from "date-fns";
 
 interface AddTodo {
   handleSubmit?: React.FormEventHandler<HTMLFormElement> | undefined;
+  todo: TodoType[];
+  setTodo: Dispatch<SetStateAction<TodoType[]>>;
 }
 
 export default function AddTodo(props: AddTodo) {
+  const [tags] = useAtom(tagsAtom);
+  const tagOptions = tags.map((e) => {
+    return { value: e, label: e };
+  });
+
+  const formRef = React.useRef<FormInstance>(null);
   const [open, setOpen] = useState(false);
   const [modalText, setModalText] = useState("Content of the modal");
 
@@ -25,12 +47,30 @@ export default function AddTodo(props: AddTodo) {
 
   const handleOk = () => {
     setModalText("The modal will be closed after two seconds");
+    setOpen(false);
   };
 
   //
-
-  const onFinish = (values: any) => {
+  //    handle form
+  const onFinish = (values: TodoType) => {
+    const dueDate = format(new Date(values.dueDate), "yyyy/MM/dd");
+    // const currentDate = format(new Date(), "yyyy/MM/dd a, p");
+    const currentDate = format(new Date(), "yyyy/MM/dd");
     console.log("Success:", values);
+    console.log("values.dueDate:", values.dueDate);
+
+    // const currentDate = new Date();
+    props.setTodo(() => [
+      ...props.todo,
+      {
+        ...values,
+        createdDate: currentDate,
+        dueDate: dueDate
+      }
+    ]);
+
+    formRef.current?.resetFields();
+    setOpen(false);
   };
 
   const onFinishFailed = (errorInfo: any) => {
@@ -64,12 +104,14 @@ export default function AddTodo(props: AddTodo) {
         onOk={handleOk}
         onCancel={handleCancel}
         width={600}
+        footer={false}
       >
         {/* <p>{modalText}</p> */}
 
         <Form
           onFinish={onFinish}
           onFinishFailed={onFinishFailed}
+          ref={formRef}
           labelCol={{ span: 4 }}
           wrapperCol={{ span: 14 }}
           layout="horizontal"
@@ -94,35 +136,45 @@ export default function AddTodo(props: AddTodo) {
           <Form.Item
             label="Due Date "
             name="dueDate"
-          >
-            <DatePicker
-        
-            format={dateFormat}
-          />
-          </Form.Item>
-
-          <Form.Item
-            label="Description "
-            name="description"
             rules={[{ required: true, message: "Please input Description!" }]}
           >
-             <Select
-            defaultValue="OPEN"
-            className="w-[120px]"
-            options={statusOptions}
-          />
-          </Form.Item>
-         
-          <Form.Item
-            label="Tag "
-            name="tag"
-          >
-            <Input className="w-[200px]"/>
+            <DatePicker format={dateFormat} />
           </Form.Item>
 
-          {/* <Button type="primary" className=" bg-blue-500">
-            Add
-          </Button> */}
+          <Form.Item label="Create tag " name="tag">
+            {/* <Input className="w-[200px]" /> */}
+            <Tags />
+          </Form.Item>
+
+          <Form.Item
+            label="Tag "
+            name="tags"
+            rules={[{ required: true, message: "Please Select Status!" }]}
+          >
+            <Select
+              mode="multiple"
+              allowClear
+              style={{ width: "100%" }}
+              placeholder="Please select"
+              //   defaultValue={["tag1"]}
+              //   onChange={handleChange}
+              options={tagOptions}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Status "
+            name="status"
+            rules={[{ required: true, message: "Please Select Status!" }]}
+          >
+            <Select className="w-[120px]" options={statusOptions} />
+          </Form.Item>
+
+          <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+            <Button type="primary" htmlType="submit">
+              Submit
+            </Button>
+          </Form.Item>
         </Form>
       </Modal>
     </div>

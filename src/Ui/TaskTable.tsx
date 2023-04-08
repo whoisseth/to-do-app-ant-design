@@ -5,90 +5,99 @@ import { useState } from "react";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { ColumnsType } from "antd/es/table";
 import AddTodo from "./AddTodo";
+import moment from "moment";
+import { useAtom } from "jotai";
+import { tagsAtom } from "@/store/store";
 
-interface TodoType {
-  id: string;
+export interface TodoType {
   createdDate: string;
   title: string;
   description: string;
-  address: string;
   dueDate: string;
   tags: string[];
   status: "OPEN" | "WORKING" | "DONE" | "OVERDUE";
 }
 
 export default function TaskTable({}) {
+  const [tags] = useAtom(tagsAtom);
+  const tagOptions =
+    tags.length > 0
+      ? tags.map((e) => {
+          return { value: e, text: e };
+        })
+      : [];
+  // const tagOptions = tags.map((e) => {
+  //   return { value: e, text: e };
+  // });
+
   const uniId = `${Math.random() * 1000}`;
 
-  const [isEditing, setIsEditing] = useState(false);
+  // const [isEditing, setIsEditing] = useState(false);
   const [editingStudent, setEditingStudent] = useState<TodoType | null>(null);
-  const [Todo, SetTodo] = useState<TodoType[]>([
+  const [todo, setTodo] = useState<TodoType[]>([
     {
-      id: uniId,
-      createdDate: "createdDate",
-      title: "This is the Title of the Task",
-      description: "description",
-      address: "address",
-      dueDate: "dueDate",
-      tags: ["nice", "developer"],
+      createdDate: "2021/04/09",
+      title: "Title",
+      description: "This is the Discription",
+      dueDate: "2023/04/09",
+      tags: ["Tag 2", "newTAg"],
       status: "OPEN"
     },
     {
-      id: uniId,
-      createdDate: "createdDate",
-      title: "This is the Title of the Task",
-      description: "description",
-      address: "address",
-      dueDate: "dueDate",
-      tags: ["loser"],
-      status: "OPEN"
+      createdDate: "2023/04/09",
+      title: "Medium Title ",
+      description: "Medium  Discription 2",
+      dueDate: "2023/10/09",
+      tags: ["NewTag"],
+      status: "DONE"
     },
     {
-      id: uniId,
-      createdDate: "createdDate",
-      title: "This is the Title of the Task",
-      description: "description",
-      address: "address",
-      dueDate: "dueDate",
-      tags: ["cool", "teacher"],
-      status: "OPEN"
-    },
-    {
-      id: uniId,
-      createdDate: "createdDate",
-      title: "This is the Title of the Task",
-      description: "description",
-      address: "address",
-      dueDate: "dueDate",
-      tags: ["nice", "developer"],
-      status: "OPEN"
+      createdDate: "2020/03/10",
+      title: "Long Title ",
+      description: "Long  Discription 3",
+      dueDate: "2023/10/09",
+      tags: ["Tag 2"],
+      status: "OVERDUE"
     }
   ]);
   const columns: ColumnsType<TodoType> = [
     {
       key: "1",
       title: "Created Date",
-      dataIndex: "createdDate"
+      dataIndex: "createdDate",
+      sorter: (a, b) =>
+        moment(a.createdDate).unix() - moment(b.createdDate).unix()
+      // sortDirections: ["descend", "ascend"]
     },
     {
       key: "2",
       title: "Title",
-      dataIndex: "title"
+      dataIndex: "title",
+      sorter: (a, b) => a.title.length - b.title.length,
+      sortDirections: ["descend", "ascend"]
     },
     {
       key: "3",
       title: "Description",
-      dataIndex: "description"
+      dataIndex: "description",
+      sorter: (a, b) => a.description.length - b.description.length,
+      sortDirections: ["descend", "ascend"]
     },
     {
       key: "4",
       title: "Due Date",
-      dataIndex: "dueDate"
+      dataIndex: "dueDate",
+      sorter: (a, b) => moment(a.dueDate).unix() - moment(b.dueDate).unix()
     },
     {
       key: "5",
       title: "Tag",
       dataIndex: "tag",
+      filters: tagOptions,
+      onFilter: (value: string | number | boolean, record) => {
+        return record.tags.indexOf(String(value)) === 0;
+      },
+
       render: (_, { tags }) => (
         <>
           {tags.map((tag) => {
@@ -108,7 +117,29 @@ export default function TaskTable({}) {
     {
       key: "6",
       title: "Status",
-      dataIndex: "status"
+      dataIndex: "status",
+      filters: [
+        {
+          text: "OPEN",
+          value: "OPEN"
+        },
+        {
+          text: "WORKING",
+          value: "WORKING"
+        },
+        {
+          text: "DONE",
+          value: "DONE"
+        },
+        {
+          text: "OVERDUE",
+          value: "OVERDUE"
+        }
+      ],
+      // onFilter: (value: string, record) => record.status.indexOf(value) === 0
+      onFilter: (value: string | number | boolean, record: TodoType) => {
+        return record.status.indexOf(String(value)) === 0;
+      }
     },
     {
       key: "7",
@@ -118,7 +149,7 @@ export default function TaskTable({}) {
           <>
             <EditOutlined
               onClick={() => {
-                onEditStudent(record);
+                // onEditStudent(record);
               }}
             />
             <DeleteOutlined
@@ -133,105 +164,43 @@ export default function TaskTable({}) {
     }
   ];
 
-  const onAddStudent = () => {
-    // const randomString = crypto.randomUUID();
-    // setEditingStudent
-    const newTodo: TodoType = {
-      id: uniId,
-      createdDate: "createdDate" + uniId,
-      title: "This is the Title of the Task " + uniId,
-      description: "description" + uniId,
-      address: "address" + uniId,
-      dueDate: "dueDate" + uniId,
-      tags: [`${uniId.slice(0, 10)}`],
-      status: "OPEN"
-    };
-    SetTodo((pre) => {
-      return [...pre, newTodo];
-    });
-  };
   const onDeleteStudent = (record: { id: string }) => {
     Modal.confirm({
       title: "Are you sure, you want to delete this student record?",
       okText: "Yes",
       okType: "danger",
       onOk: () => {
-        SetTodo((pre) => {
-          return pre.filter((d) => d.id !== record.id);
+        setTodo((pre) => {
+          return pre.filter((d) => d !== record);
         });
       }
     });
   };
-  const onEditStudent = (record: any) => {
-    setIsEditing(true);
-    setEditingStudent({ ...record });
-  };
-  const resetEditing = () => {
-    setIsEditing(false);
-    setEditingStudent(null);
-  };
+  // const onEditStudent = (record: any) => {
+  //   setIsEditing(true);
+  //   setEditingStudent({ ...record });
+  // };
+  // const resetEditing = () => {
+  //   setIsEditing(false);
+  //   setEditingStudent(null);
+  // };
 
   return (
     <div className="">
       <h1 className="text-3xl mb-4">Todo-app</h1>
-      <AddTodo handleSubmit={onAddStudent} />
+      {/* <AddTodo {...{ todo, setTodo }} handleSubmit={onAddStudent} /> */}
+      <AddTodo {...{ todo, setTodo }} />
       <Table
         sticky
-        showHeader
+        bordered
         tableLayout="fixed"
-        rootClassName="border rounded-lg overflow-hidden border-gray-200"
         scroll={{
           x: 0,
           y: "400px"
         }}
         columns={columns}
-        dataSource={Todo}
+        dataSource={todo}
       />
-      <Modal
-        title="Edit Student"
-        visible={isEditing}
-        okText="Save"
-        onCancel={() => {
-          resetEditing();
-        }}
-        onOk={() => {
-          SetTodo((pre) => {
-            return pre.map((d) => {
-              if (d.id === editingStudent?.id) {
-                return editingStudent;
-              } else {
-                return d;
-              }
-            });
-          });
-          resetEditing();
-        }}
-      >
-        <Input
-          value={editingStudent?.title}
-          onChange={(e) => {
-            setEditingStudent((pre: any) => {
-              return { ...pre, name: e.target.value };
-            });
-          }}
-        />
-        <Input
-          value={editingStudent?.description}
-          onChange={(e) => {
-            setEditingStudent((pre: any) => {
-              return { ...pre, email: e.target.value };
-            });
-          }}
-        />
-        <Input
-          value={editingStudent?.address}
-          onChange={(e) => {
-            setEditingStudent((pre: any) => {
-              return { ...pre, address: e.target.value };
-            });
-          }}
-        />
-      </Modal>
     </div>
   );
 }
