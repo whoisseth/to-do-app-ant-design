@@ -1,72 +1,117 @@
 /** @format */
 
-import { Button, Table, Modal, Input } from "antd";
+import { Table, Modal, Input, Tag } from "antd";
 import { useState } from "react";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
-// import { ColumnsType } from "antd/es/tabele";
-// import { Task } from "@/types/types";
+import { ColumnsType } from "antd/es/table";
+import AddTodo from "./AddTodo";
 
-interface DataSourceType {
-  id: number;
-  name: string;
-  email: string;
+interface TodoType {
+  id: string;
+  createdDate: string;
+  title: string;
+  description: string;
   address: string;
+  dueDate: string;
+  tags: string[];
+  status: "OPEN" | "WORKING" | "DONE" | "OVERDUE";
 }
 
 export default function TaskTable({}) {
+  const uniId = `${Math.random() * 1000}`;
+
   const [isEditing, setIsEditing] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<DataSourceType | null>(
-    null
-  );
-  const [dataSource, setDataSource] = useState<DataSourceType[]>([
+  const [editingStudent, setEditingStudent] = useState<TodoType | null>(null);
+  const [Todo, SetTodo] = useState<TodoType[]>([
     {
-      id: 1,
-      name: "John",
-      email: "john@gmail.com",
-      address: "John Address"
+      id: uniId,
+      createdDate: "createdDate",
+      title: "This is the Title of the Task",
+      description: "description",
+      address: "address",
+      dueDate: "dueDate",
+      tags: ["nice", "developer"],
+      status: "OPEN"
     },
     {
-      id: 2,
-      name: "David",
-      email: "david@gmail.com",
-      address: "David Address"
+      id: uniId,
+      createdDate: "createdDate",
+      title: "This is the Title of the Task",
+      description: "description",
+      address: "address",
+      dueDate: "dueDate",
+      tags: ["loser"],
+      status: "OPEN"
     },
     {
-      id: 3,
-      name: "James",
-      email: "james@gmail.com",
-      address: "James Address"
+      id: uniId,
+      createdDate: "createdDate",
+      title: "This is the Title of the Task",
+      description: "description",
+      address: "address",
+      dueDate: "dueDate",
+      tags: ["cool", "teacher"],
+      status: "OPEN"
     },
     {
-      id: 4,
-      name: "Sam",
-      email: "sam@gmail.com",
-      address: "Sam Address"
+      id: uniId,
+      createdDate: "createdDate",
+      title: "This is the Title of the Task",
+      description: "description",
+      address: "address",
+      dueDate: "dueDate",
+      tags: ["nice", "developer"],
+      status: "OPEN"
     }
   ]);
-  const columns = [
+  const columns: ColumnsType<TodoType> = [
     {
       key: "1",
-      title: "ID",
-      dataIndex: "id"
+      title: "Created Date",
+      dataIndex: "createdDate"
     },
     {
       key: "2",
-      title: "Name",
-      dataIndex: "name"
+      title: "Title",
+      dataIndex: "title"
     },
     {
       key: "3",
-      title: "Email",
-      dataIndex: "email"
+      title: "Description",
+      dataIndex: "description"
     },
     {
       key: "4",
-      title: "Address",
-      dataIndex: "address"
+      title: "Due Date",
+      dataIndex: "dueDate"
     },
     {
       key: "5",
+      title: "Tag",
+      dataIndex: "tag",
+      render: (_, { tags }) => (
+        <>
+          {tags.map((tag) => {
+            let color = tag.length > 5 ? "geekblue" : "green";
+            if (tag === "loser") {
+              color = "volcano";
+            }
+            return (
+              <Tag color={color} key={tag}>
+                {tag.toUpperCase()}
+              </Tag>
+            );
+          })}
+        </>
+      )
+    },
+    {
+      key: "6",
+      title: "Status",
+      dataIndex: "status"
+    },
+    {
+      key: "7",
       title: "Actions",
       render: (record: any) => {
         return (
@@ -89,25 +134,30 @@ export default function TaskTable({}) {
   ];
 
   const onAddStudent = () => {
-    const randomNumber = Math.random() * 1000;
-    const newStudent = {
-      id: randomNumber,
-      name: "Name " + randomNumber,
-      email: randomNumber + "@gmail.com",
-      address: "Address " + randomNumber
+    // const randomString = crypto.randomUUID();
+    // setEditingStudent
+    const newTodo: TodoType = {
+      id: uniId,
+      createdDate: "createdDate" + uniId,
+      title: "This is the Title of the Task " + uniId,
+      description: "description" + uniId,
+      address: "address" + uniId,
+      dueDate: "dueDate" + uniId,
+      tags: [`${uniId.slice(0, 10)}`],
+      status: "OPEN"
     };
-    setDataSource((pre) => {
-      return [...pre, newStudent];
+    SetTodo((pre) => {
+      return [...pre, newTodo];
     });
   };
-  const onDeleteStudent = (record: { id: number }) => {
+  const onDeleteStudent = (record: { id: string }) => {
     Modal.confirm({
       title: "Are you sure, you want to delete this student record?",
       okText: "Yes",
       okType: "danger",
       onOk: () => {
-        setDataSource((pre) => {
-          return pre.filter((student) => student.id !== record.id);
+        SetTodo((pre) => {
+          return pre.filter((d) => d.id !== record.id);
         });
       }
     });
@@ -122,56 +172,66 @@ export default function TaskTable({}) {
   };
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <Button onClick={onAddStudent}>Add a new Student</Button>
-        <Table columns={columns} dataSource={dataSource}></Table>
-        <Modal
-          title="Edit Student"
-          visible={isEditing}
-          okText="Save"
-          onCancel={() => {
-            resetEditing();
-          }}
-          onOk={() => {
-            setDataSource((pre) => {
-              return pre.map((student) => {
-                if (student.id === editingStudent?.id) {
-                  return editingStudent;
-                } else {
-                  return student;
-                }
-              });
+    <div className="">
+      <h1 className="text-3xl mb-4">Todo-app</h1>
+      <AddTodo handleSubmit={onAddStudent} />
+      <Table
+        sticky
+        showHeader
+        tableLayout="fixed"
+        rootClassName="border rounded-lg overflow-hidden border-gray-200"
+        scroll={{
+          x: 0,
+          y: "400px"
+        }}
+        columns={columns}
+        dataSource={Todo}
+      />
+      <Modal
+        title="Edit Student"
+        visible={isEditing}
+        okText="Save"
+        onCancel={() => {
+          resetEditing();
+        }}
+        onOk={() => {
+          SetTodo((pre) => {
+            return pre.map((d) => {
+              if (d.id === editingStudent?.id) {
+                return editingStudent;
+              } else {
+                return d;
+              }
             });
-            resetEditing();
+          });
+          resetEditing();
+        }}
+      >
+        <Input
+          value={editingStudent?.title}
+          onChange={(e) => {
+            setEditingStudent((pre: any) => {
+              return { ...pre, name: e.target.value };
+            });
           }}
-        >
-          <Input
-            value={editingStudent?.name}
-            onChange={(e) => {
-              setEditingStudent((pre: any) => {
-                return { ...pre, name: e.target.value };
-              });
-            }}
-          />
-          <Input
-            value={editingStudent?.email}
-            onChange={(e) => {
-              setEditingStudent((pre: any) => {
-                return { ...pre, email: e.target.value };
-              });
-            }}
-          />
-          <Input
-            value={editingStudent?.address}
-            onChange={(e) => {
-              setEditingStudent((pre: any) => {
-                return { ...pre, address: e.target.value };
-              });
-            }}
-          />
-        </Modal>
-      </header>
+        />
+        <Input
+          value={editingStudent?.description}
+          onChange={(e) => {
+            setEditingStudent((pre: any) => {
+              return { ...pre, email: e.target.value };
+            });
+          }}
+        />
+        <Input
+          value={editingStudent?.address}
+          onChange={(e) => {
+            setEditingStudent((pre: any) => {
+              return { ...pre, address: e.target.value };
+            });
+          }}
+        />
+      </Modal>
     </div>
   );
 }
