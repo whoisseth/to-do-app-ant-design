@@ -10,7 +10,6 @@ import {
   Modal,
   Select
 } from "antd";
-// import TextArea from "antd/es/input/TextArea";
 import React, { Dispatch, SetStateAction, useState, useRef } from "react";
 import { TodoType } from "./TaskTable";
 import Tags from "./Tags";
@@ -89,7 +88,7 @@ export default function AddTodo(props: AddTodo) {
       <Button
         onClick={showModal}
         type="primary"
-        className="bg-blue-500 flex items-center mb-4"
+        className="bg-blue-500 flex items-center "
       >
         <PlusOutlined />
         <span>Add todo</span>

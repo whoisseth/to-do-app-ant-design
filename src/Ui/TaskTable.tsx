@@ -1,13 +1,22 @@
 /** @format */
 
-import { Table, Modal, Input, Tag } from "antd";
-import { useState } from "react";
+import { Table, Modal, Input, Tag, Select } from "antd";
+import {
+  ChangeEvent,
+  JSXElementConstructor,
+  ReactElement,
+  useState
+} from "react";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { ColumnsType } from "antd/es/table";
 import AddTodo from "./AddTodo";
 import moment from "moment";
 import { useAtom } from "jotai";
 import { tagsAtom } from "@/store/store";
+import { map, includes, sortBy, uniqBy, each, result, get } from "lodash";
+
+const Search = Input.Search;
+const Option = Select.Option;
 
 export interface TodoType {
   createdDate: string;
@@ -20,20 +29,17 @@ export interface TodoType {
 
 export default function TaskTable({}) {
   const [tags] = useAtom(tagsAtom);
+
+  const [filterTable, setFilterTable] = useState<TodoType[] | null>(null);
   const tagOptions =
     tags.length > 0
       ? tags.map((e) => {
           return { value: e, text: e };
         })
       : [];
-  // const tagOptions = tags.map((e) => {
-  //   return { value: e, text: e };
-  // });
 
   const uniId = `${Math.random() * 1000}`;
 
-  // const [isEditing, setIsEditing] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<TodoType | null>(null);
   const [todo, setTodo] = useState<TodoType[]>([
     {
       createdDate: "2021/04/09",
@@ -136,7 +142,6 @@ export default function TaskTable({}) {
           value: "OVERDUE"
         }
       ],
-      // onFilter: (value: string, record) => record.status.indexOf(value) === 0
       onFilter: (value: string | number | boolean, record: TodoType) => {
         return record.status.indexOf(String(value)) === 0;
       }
@@ -176,30 +181,41 @@ export default function TaskTable({}) {
       }
     });
   };
-  // const onEditStudent = (record: any) => {
-  //   setIsEditing(true);
-  //   setEditingStudent({ ...record });
-  // };
-  // const resetEditing = () => {
-  //   setIsEditing(false);
-  //   setEditingStudent(null);
-  // };
+
+  // handle search
+  function onSearch(e: string) {
+    const filterTable = todo.filter((o: any) =>
+      Object.keys(o).some((k) =>
+        String(o[k]).toLowerCase().includes(e.toLowerCase())
+      )
+    );
+    setFilterTable(filterTable);
+  }
 
   return (
     <div className="">
       <h1 className="text-3xl mb-4">Todo-app</h1>
-      {/* <AddTodo {...{ todo, setTodo }} handleSubmit={onAddStudent} /> */}
-      <AddTodo {...{ todo, setTodo }} />
+      <section className="flex  mb-4 items-center justify-between gap-3">
+        <AddTodo {...{ todo, setTodo }} />
+        <Search
+          className="max-w-[300px]"
+          size="large"
+          placeholder="Search Todo..."
+          onSearch={onSearch}
+          onChange={(e) => onSearch(e.target.value)}
+        />
+        
+      </section>
       <Table
         sticky
         bordered
-        tableLayout="fixed"
+        tableLayout="auto"
         scroll={{
           x: 0,
           y: "400px"
         }}
         columns={columns}
-        dataSource={todo}
+        dataSource={filterTable == null ? todo : filterTable}
       />
     </div>
   );
