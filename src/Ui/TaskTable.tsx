@@ -1,24 +1,33 @@
 /** @format */
 
-import { Table, Modal, Input, Tag, Select } from "antd";
 import {
-  ChangeEvent,
-  JSXElementConstructor,
-  ReactElement,
-  useState
-} from "react";
+  Table,
+  Modal,
+  Input,
+  Tag,
+  Select,
+  InputNumber,
+  Form,
+  Typography,
+  Popconfirm,
+  DatePicker
+} from "antd";
+import { useState } from "react";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { ColumnsType } from "antd/es/table";
-import AddTodo from "./AddTodo";
+import { ColumnGroupType, ColumnProps, ColumnsType } from "antd/es/table";
+import AddTodo, { StatusOptions } from "./AddTodo";
 import moment from "moment";
 import { useAtom } from "jotai";
-import { tagsAtom } from "@/store/store";
-import { map, includes, sortBy, uniqBy, each, result, get } from "lodash";
+import { ColumnType } from "antd/es/list";
+import { tagsAtom } from "./../store/store";
+import Tags from "./Tags";
+const { TextArea } = Input;
 
 const Search = Input.Search;
 const Option = Select.Option;
 
 export interface TodoType {
+  id: string;
   createdDate: string;
   title: string;
   description: string;
@@ -27,8 +36,76 @@ export interface TodoType {
   status: "OPEN" | "WORKING" | "DONE" | "OVERDUE";
 }
 
+interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
+  editing: boolean;
+  dataIndex: string;
+  title: any;
+  inputType: "number" | "text";
+  record: TodoType;
+  index: number;
+  children: React.ReactNode;
+  // renderCell: (dataIndex: keyof TodoType, record: TodoType) => React.ReactNode;
+}
+
+const EditableCell: React.FC<EditableCellProps> = ({
+  editing,
+  dataIndex,
+  title,
+  inputType,
+  record,
+  index,
+  children,
+  className,
+  ...restProps
+}) => {
+  const [tags] = useAtom(tagsAtom);
+  const tagOptions = tags.map((e) => {
+    return { value: e, label: e };
+  });
+  // const inputNode = inputType === "number" ? <InputNumber /> : <Input />;
+  // else if (dataIndex == "dueDate") {
+  //   inputNode = <DatePicker format={"YYYY/MM/DD"} />;
+  // }
+  let inputNode;
+  if (dataIndex == "title") {
+    inputNode = <Input />;
+  } else if (dataIndex == "description") {
+    inputNode = <TextArea maxLength={1000} className="w-[200px]" />;
+  } else if (dataIndex == "status") {
+    inputNode = <Select options={StatusOptions} />;
+  } else inputNode = <Input />;
+
+  // =  === "number" ?  : ;
+
+  return (
+    <td {...restProps}>
+      {editing ? (
+        <Form.Item
+          name={dataIndex}
+          style={{ margin: 0 }}
+          rules={[
+            {
+              required: true,
+              message: `Please Input ${title}!`
+            }
+          ]}
+        >
+          {inputNode}
+        </Form.Item>
+      ) : (
+        children
+      )}
+    </td>
+  );
+};
+
 export default function TaskTable({}) {
   const [tags] = useAtom(tagsAtom);
+  const [form] = Form.useForm();
+  const [editingKey, setEditingKey] = useState<string>("");
+  // console.log("editingKey-", editingKey);
+
+  const isEditing = (record: TodoType) => record.id === editingKey;
 
   const [filterTable, setFilterTable] = useState<TodoType[] | null>(null);
   const tagOptions =
@@ -38,10 +115,11 @@ export default function TaskTable({}) {
         })
       : [];
 
-  const uniId = `${Math.random() * 1000}`;
+  // const uniId = `${Math.random() * 1000}`;
 
   const [todo, setTodo] = useState<TodoType[]>([
     {
+      id: "0",
       createdDate: "2021/04/09",
       title: "Title",
       description: "This is the Discription",
@@ -50,6 +128,7 @@ export default function TaskTable({}) {
       status: "OPEN"
     },
     {
+      id: "1",
       createdDate: "2023/04/09",
       title: "Medium Title ",
       description: "Medium  Discription 2",
@@ -58,6 +137,7 @@ export default function TaskTable({}) {
       status: "DONE"
     },
     {
+      id: "2",
       createdDate: "2020/03/10",
       title: "Long Title ",
       description: "Long  Discription 3",
@@ -66,47 +146,101 @@ export default function TaskTable({}) {
       status: "OVERDUE"
     }
   ]);
-  const columns: ColumnsType<TodoType> = [
+  //  editing ###
+
+  const edit = (record: Partial<TodoType> & { id: React.Key }) => {
+    form.setFieldsValue({
+      title: "",
+      description: "",
+      tag: "",
+      dueDate: "",
+      status: "",
+      ...record
+    });
+    setEditingKey(record.id);
+  };
+
+  const cancel = () => {
+    setEditingKey("");
+  };
+
+  const save = async (key: React.Key) => {
+    try {
+      const row = (await form.validateFields()) as TodoType;
+
+      console.log("row", row);
+      const newData = [...todo];
+      const index = newData.findIndex((item) => key === item.id);
+      if (index > -1) {
+        const item = newData[index];
+        newData.splice(index, 1, {
+          ...item,
+          ...row
+        });
+        setTodo(newData);
+        console.log("newData", newData);
+        setEditingKey("");
+
+        // console.log("saveData",new)
+      } else {
+        newData.push(row);
+        setTodo(newData);
+        setEditingKey("");
+      }
+    } catch (errInfo) {
+      console.log("Validate Failed:", errInfo);
+    }
+  };
+  //  editing ***
+
+  // const columns: ColumnsType<TodoType> = [
+  const columns = [
     {
       key: "1",
       title: "Created Date",
       dataIndex: "createdDate",
-      sorter: (a, b) =>
+      sorter: (a: TodoType, b: TodoType) =>
         moment(a.createdDate).unix() - moment(b.createdDate).unix()
-      // sortDirections: ["descend", "ascend"]
     },
     {
       key: "2",
       title: "Title",
       dataIndex: "title",
-      sorter: (a, b) => a.title.length - b.title.length,
+      editable: true,
+      sorter: (a: TodoType, b: TodoType) => a.title.length - b.title.length,
       sortDirections: ["descend", "ascend"]
     },
     {
       key: "3",
       title: "Description",
       dataIndex: "description",
-      sorter: (a, b) => a.description.length - b.description.length,
-      sortDirections: ["descend", "ascend"]
+      sorter: (a: TodoType, b: TodoType) =>
+        a.description.length - b.description.length,
+      sortDirections: ["descend", "ascend"],
+
+      editable: true
     },
     {
       key: "4",
       title: "Due Date",
       dataIndex: "dueDate",
-      sorter: (a, b) => moment(a.dueDate).unix() - moment(b.dueDate).unix()
+      editable: true,
+      sorter: (a: TodoType, b: TodoType) =>
+        moment(a.dueDate).unix() - moment(b.dueDate).unix()
     },
     {
       key: "5",
       title: "Tag",
       dataIndex: "tag",
+      editable: true,
       filters: tagOptions,
-      onFilter: (value: string | number | boolean, record) => {
+      onFilter: (value: string | number | boolean, record: TodoType) => {
         return record.tags.indexOf(String(value)) === 0;
       },
 
-      render: (_, { tags }) => (
+      render: (_: any, record: TodoType) => (
         <>
-          {tags.map((tag) => {
+          {record.tags.map((tag) => {
             let color = tag.length > 5 ? "geekblue" : "green";
             if (tag === "loser") {
               color = "volcano";
@@ -124,6 +258,7 @@ export default function TaskTable({}) {
       key: "6",
       title: "Status",
       dataIndex: "status",
+      editable: true,
       filters: [
         {
           text: "OPEN",
@@ -149,14 +284,33 @@ export default function TaskTable({}) {
     {
       key: "7",
       title: "Actions",
-      render: (record: any) => {
-        return (
+      render: (_: any, record: TodoType) => {
+        const editable = isEditing(record);
+        // console.log(edit, "record");
+        return editable ? (
+          <span>
+            <Typography.Link
+              onClick={() => save(record.id)}
+              style={{ marginRight: 8 }}
+            >
+              Save
+            </Typography.Link>
+            <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
+              <a>Cancel</a>
+            </Popconfirm>
+          </span>
+        ) : (
           <>
-            <EditOutlined
-              onClick={() => {
-                // onEditStudent(record);
-              }}
-            />
+            {/* <EditOutlined
+              disabled={editingKey !== ""}
+              onClick={() => edit(record)}
+            /> */}
+            <Typography.Link
+              disabled={editingKey !== ""}
+              onClick={() => edit(record)}
+            >
+              Edit
+            </Typography.Link>
             <DeleteOutlined
               onClick={() => {
                 onDeleteStudent(record);
@@ -191,6 +345,23 @@ export default function TaskTable({}) {
     );
     setFilterTable(filterTable);
   }
+  // edit
+
+  const mergedColumns = columns.map((col) => {
+    if (!col.editable) {
+      return col;
+    }
+    return {
+      ...col,
+      onCell: (record: TodoType) => ({
+        record,
+        inputType: col.dataIndex,
+        dataIndex: col.dataIndex,
+        title: col.title,
+        editing: isEditing(record)
+      })
+    };
+  });
 
   return (
     <div className="">
@@ -204,19 +375,27 @@ export default function TaskTable({}) {
           onSearch={onSearch}
           onChange={(e) => onSearch(e.target.value)}
         />
-        
       </section>
-      <Table
-        sticky
-        bordered
-        tableLayout="auto"
-        scroll={{
-          x: 0,
-          y: "400px"
-        }}
-        columns={columns}
-        dataSource={filterTable == null ? todo : filterTable}
-      />
+      <Form form={form} component={false}>
+        <Table
+          rowClassName="editable-row"
+          components={{
+            body: {
+              cell: EditableCell
+            }
+          }}
+          sticky
+          bordered
+          tableLayout="auto"
+          scroll={{
+            x: 0,
+            y: "400px"
+          }}
+          // columns={columns}
+          columns={mergedColumns}
+          dataSource={filterTable == null ? todo : filterTable}
+        />
+      </Form>
     </div>
   );
 }

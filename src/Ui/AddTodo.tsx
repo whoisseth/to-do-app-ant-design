@@ -17,6 +17,14 @@ import { useAtom } from "jotai";
 import { tagsAtom } from "@/store/store";
 import { format } from "date-fns";
 const { TextArea } = Input;
+
+export const StatusOptions = [
+  { value: "OPEN", label: "OPEN" },
+  { value: "WORKING", label: "WORKING" },
+  { value: "DONE", label: "DONE" },
+  { value: "OVERDUE", label: "OVERDUE" }
+];
+
 interface AddTodo {
   handleSubmit?: React.FormEventHandler<HTMLFormElement> | undefined;
   todo: TodoType[];
@@ -60,6 +68,7 @@ export default function AddTodo(props: AddTodo) {
       ...props.todo,
       {
         ...values,
+        id: props.todo.length.toString(),
         createdDate: currentDate,
         dueDate: dueDate
       }
@@ -75,13 +84,7 @@ export default function AddTodo(props: AddTodo) {
 
   //
 
-  const dateFormat = "YYYY/MM/DD";
-  const statusOptions = [
-    { value: "OPEN", label: "OPEN" },
-    { value: "WORKING", label: "WORKING" },
-    { value: "DONE", label: "DONE" },
-    { value: "OVERDUE", label: "OVERDUE" }
-  ];
+  //   const dateFormat = "YYYY/MM/DD";
 
   return (
     <div>
@@ -134,7 +137,7 @@ export default function AddTodo(props: AddTodo) {
             name="dueDate"
             rules={[{ required: true, message: "Please input Description!" }]}
           >
-            <DatePicker format={dateFormat} />
+            <DatePicker format={"YYYY/MM/DD"} />
           </Form.Item>
 
           <Form.Item label="Create tag " name="tag">
@@ -163,7 +166,7 @@ export default function AddTodo(props: AddTodo) {
             name="status"
             rules={[{ required: true, message: "Please Select Status!" }]}
           >
-            <Select className="w-[120px]" options={statusOptions} />
+            <Select className="w-[120px]" options={StatusOptions} />
           </Form.Item>
 
           <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
