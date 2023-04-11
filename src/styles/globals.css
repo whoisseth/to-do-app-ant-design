@@ -7,3 +7,23 @@
 .ant-btn-primary {
   @apply bg-blue-500
 }
+
+.ant-table-thead > tr > th {
+  /* @apply !bg-red-500; */
+}
+
+/* .ant-table-cell-fix-left {
+  @apply !z-50
+}
+
+.ant-table-cell-fix-right {
+  @apply !z-50
+}
+
+.ant-table-wrapper {
+  z-index: 9999 !important;
+}
+
+.editable-cell {
+  z-index: 10000 !important;
+} */

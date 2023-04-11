@@ -122,7 +122,9 @@ export default function AddTodo(props: AddTodo) {
             name="title"
             rules={[{ required: true, message: "Please input title!" }]}
           >
-            <Input className="w-[200px]" />
+            {/* <Input className="w-[200px]" /> */}
+            <input className="border" />
+            {/* <Input className="w-[200px]" /> */}
           </Form.Item>
 
           <Form.Item

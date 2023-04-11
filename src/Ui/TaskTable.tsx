@@ -15,16 +15,32 @@ import {
 import { useState } from "react";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { ColumnGroupType, ColumnProps, ColumnsType } from "antd/es/table";
+// import type { ColumnsType } from "antd/es/table";
+// import { ColumnProps } from 'antd/lib/table';
 import AddTodo, { StatusOptions } from "./AddTodo";
 import moment from "moment";
 import { useAtom } from "jotai";
-import { ColumnType } from "antd/es/list";
+// import { ColumnType } from "antd/es/list";
 import { tagsAtom } from "./../store/store";
 import Tags from "./Tags";
+import { ColumnType } from "antd/es/list";
 const { TextArea } = Input;
 
 const Search = Input.Search;
 const Option = Select.Option;
+
+// type ColumnType<T> = {
+//   key: string;
+//   title: string;
+//   dataIndex: keyof T;
+//   sorter?: (a: T, b: T) => number;
+//   render?: (value: any, record: T, index: number) => React.ReactNode;
+// };
+
+// type ColumnsType<T> = Array<ColumnType<T>>;
+interface EditableColumnProps<T> extends ColumnProps<T> {
+  editable?: boolean;
+}
 
 export interface TodoType {
   id: string;
@@ -194,16 +210,18 @@ export default function TaskTable({}) {
   //  editing ***
 
   // const columns: ColumnsType<TodoType> = [
-  const columns = [
+  const columns: EditableColumnProps<TodoType>[] = [
     {
       key: "1",
       title: "Created Date",
       dataIndex: "createdDate",
+      // fixed: "left",
       sorter: (a: TodoType, b: TodoType) =>
         moment(a.createdDate).unix() - moment(b.createdDate).unix()
     },
     {
       key: "2",
+      fixed: "left",
       title: "Title",
       dataIndex: "title",
       editable: true,
@@ -283,6 +301,7 @@ export default function TaskTable({}) {
     },
     {
       key: "7",
+      fixed: "right",
       title: "Actions",
       render: (_: any, record: TodoType) => {
         const editable = isEditing(record);
@@ -347,10 +366,13 @@ export default function TaskTable({}) {
   }
   // edit
 
-  const mergedColumns = columns.map((col) => {
+  const mergedColumns: Array<
+    ColumnProps<TodoType> & EditableColumnProps<TodoType>
+  > = columns.map((col) => {
     if (!col.editable) {
-      return col;
+      return col as ColumnProps<TodoType> & EditableColumnProps<TodoType>;
     }
+
     return {
       ...col,
       onCell: (record: TodoType) => ({
@@ -360,7 +382,7 @@ export default function TaskTable({}) {
         title: col.title,
         editing: isEditing(record)
       })
-    };
+    } as ColumnProps<TodoType> & EditableColumnProps<TodoType>;
   });
 
   return (
@@ -378,6 +400,7 @@ export default function TaskTable({}) {
       </section>
       <Form form={form} component={false}>
         <Table
+          // scroll={{ x: 1500, y: 300 }}
           rowClassName="editable-row"
           components={{
             body: {
@@ -387,11 +410,6 @@ export default function TaskTable({}) {
           sticky
           bordered
           tableLayout="auto"
-          scroll={{
-            x: 0,
-            y: "400px"
-          }}
-          // columns={columns}
           columns={mergedColumns}
           dataSource={filterTable == null ? todo : filterTable}
         />
