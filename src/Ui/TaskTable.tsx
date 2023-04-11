@@ -89,7 +89,8 @@ const EditableCell: React.FC<EditableCellProps> = ({
     inputNode = <TextArea maxLength={1000} className="w-[200px]" />;
   } else if (dataIndex == "status") {
     inputNode = <Select options={StatusOptions} />;
-  } else inputNode = <Input />;
+  } else if (dataIndex == "title" || dataIndex == "dueDate")
+    inputNode = <Input />;
 
   // =  === "number" ?  : ;
 
@@ -250,7 +251,7 @@ export default function TaskTable({}) {
       key: "5",
       title: "Tag",
       dataIndex: "tag",
-      editable: true,
+      // editable: true,
       filters: tagOptions,
       onFilter: (value: string | number | boolean, record: TodoType) => {
         return record.tags.indexOf(String(value)) === 0;
